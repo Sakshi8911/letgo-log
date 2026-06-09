@@ -1634,9 +1634,6 @@ function waterPlant() {
   document.body.appendChild(mist); setTimeout(()=>mist.remove(), 2700);
 
   input.value=''; input.focus();
-  const badge=document.createElement('div'); badge.className='aff-badge'; badge.textContent='🌿 Watered';
-  badge.style.cssText=`left:${sceneCX()-44}px;top:${groundY()-90}px;`;
-  document.body.appendChild(badge); setTimeout(()=>badge.remove(), 2800);
 }
 
 /* ═══════════ KEYBOARD ═══════════ */
