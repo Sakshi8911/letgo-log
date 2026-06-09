@@ -198,7 +198,7 @@ let audioEnabled = false;
 /* BFY / BPY = yearly global baselines shown in the "This Year" counter.
    BFT / BPT are no longer used — "Today" always shows just today's local count
    so changing these baselines never causes a confusing jump. */
-const BFY = 342891, BPY = 218764;
+const BFY = 0, BPY = 0;
 const fmt = n => n.toLocaleString();
 /* These track today's local session totals (start at 0 each day) */
 let fireTodayCount  = 0;   /* incremented in throwLog, synced to fireDayCount */
