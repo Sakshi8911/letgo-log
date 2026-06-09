@@ -1,0 +1,6 @@
+services:
+  - type: static
+    name: letgo-log
+    branch: main
+    buildCommand: ""
+    staticPublishPath: .
