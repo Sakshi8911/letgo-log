@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Letting Go Log & Positive Plant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="night">
+
+<!-- Sky -->
+<div class="stars-layer" id="starsLayer"></div>
+<div class="sun"></div>
+
+<!-- Full-page scene canvas (fire, tree, owl, bird all drawn here) -->
+<canvas id="sceneCanvas"></canvas>
+
+<!-- Toggle (top-left) -->
+<div class="toggle-wrap">
+    <button class="toggle-btn night-btn active" onclick="switchView('night')">🔥 Letting Go Log</button>
+    <button class="toggle-btn day-btn" onclick="switchView('day')">🌱 Positive Plant</button>
+</div>
+
+<!-- Audio (top-right) -->
+<button class="audio-btn" id="audioBtn" onclick="toggleAudio()">🔇 Unmute</button>
+
+<!-- Buy Me a Coffee -->
+<a class="bmc-btn" href="https://www.buymeacoffee.com/sasha8911" target="_blank" rel="noopener">
+  <img src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg" alt="coffee cup"/>
+  <span>Buy me a coffee</span>
+</a>
+
+<!-- Moderation -->
+<div id="modAlert" class="mod-alert"><p id="modAlertMain"></p>
+    <p id="modAlertSub"></p></div>
+
+<!-- ═══════════ VIEW A — FIRE ═══════════ -->
+<div class="view night active" id="viewNight">
+    <div class="counters">
+        <div class="counter-box">
+            <div class="counter-num" id="fireTodayEl">0</div>
+            <div class="counter-lbl">Released Today</div>
+        </div>
+        <div class="counter-box">
+            <div class="counter-num" id="fireYearEl">0</div>
+            <div class="counter-lbl">Released This Year</div>
+        </div>
+    </div>
+    <div class="input-wrap">
+        <input type="text" id="fireInput" placeholder="What do you want to let go of?" maxlength="80"/>
+        <button class="submit-btn" id="fireSubmit" onclick="throwLog()">Release</button>
+    </div>
+</div>
+
+<!-- ═══════════ VIEW B — PLANT ═══════════ -->
+<div class="view day" id="viewDay">
+    <div class="counters">
+        <div class="counter-box">
+            <div class="counter-num" id="plantTodayEl">0</div>
+            <div class="counter-lbl">Watered Today</div>
+        </div>
+        <div class="counter-box">
+            <div class="counter-num" id="plantYearEl">0</div>
+            <div class="counter-lbl">Watered This Year</div>
+        </div>
+    </div>
+
+    <!-- Watering can (HTML overlay, animates on submit) -->
+    <div class="watering-can-wrap" id="wateringCan" style="position:fixed; opacity:0; pointer-events:none; filter:drop-shadow(0 8px 12px rgba(0,0,0,0.15));">
+        <!-- Can body: spout points to upper-right (nozzle tip ≈ SVG coord 80,10) -->
+        <svg id="canSvg" xmlns="http://www.w3.org/2000/svg" width="100" height="72" viewBox="0 0 100 72" fill="none">
+          <!-- handle arc on the left -->
+          <path d="M28 56 C10 56 10 22 30 26" stroke="#C8B8B0" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <!-- body -->
+          <path d="M28 24 L58 22 C61 22 64 25 64 28 L62 58 C62 61 59 63 56 63 L30 63 C27 63 24 61 24 58 L22 28 C22 25 25 24 28 24 Z" fill="#E07A5F"/>
+          <path d="M23 42 L63 40" stroke="#E9C46A" stroke-width="2.5"/>
+          <!-- highlight -->
+          <path d="M28 26 Q42 23 58 24" stroke="rgba(255,200,160,0.4)" stroke-width="3" stroke-linecap="round"/>
+          <!-- spout pointing to upper-right -->
+          <path d="M58 56 L76 30" stroke="#E07A5F" stroke-width="5" stroke-linecap="round"/>
+          <path d="M58 56 L76 30" stroke="#E9C46A" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- nozzle tip -->
+          <path d="M74 28 L84 20 L79 16 L72 25 Z" fill="#E9C46A"/>
+          <line x1="85" y1="19" x2="79" y2="14" stroke="#D4AF37" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <!-- drops: all start near nozzle tip, fan out slightly as they fall toward the canopy below-left -->
+        <div class="wdrop" style="--wx:-52px;--wy:88px;--wd:1.3s;--wdel:0.0s;"></div>
+        <div class="wdrop" style="--wx:-48px;--wy:82px;--wd:1.3s;--wdel:0.22s;"></div>
+        <div class="wdrop" style="--wx:-56px;--wy:86px;--wd:1.3s;--wdel:0.44s;"></div>
+        <div class="wdrop" style="--wx:-44px;--wy:80px;--wd:1.3s;--wdel:0.66s;"></div>
+        <div class="wdrop" style="--wx:-60px;--wy:92px;--wd:1.3s;--wdel:0.88s;"></div>
+        <div class="wdrop" style="--wx:-50px;--wy:78px;--wd:1.3s;--wdel:0.11s;"></div>
+        <div class="wdrop" style="--wx:-46px;--wy:94px;--wd:1.3s;--wdel:0.55s;"></div>
+    </div>
+
+    <div class="input-wrap">
+        <input type="text" id="plantInput" placeholder="Type a positive affirmation..." maxlength="80"/>
+        <button class="submit-btn" id="plantSubmit" onclick="waterPlant()">Water</button>
+    </div>
+</div>
+
+<audio id="fireAudio" loop preload="metadata">
+    <source src="audio/night.mp3" type="audio/mpeg"/>
+    <source src="audio/night.wav" type="audio/wav"/>
+</audio>
+<audio id="plantAudio" loop preload="metadata">
+    <source src="audio/forest.mp3" type="audio/mpeg"/>
+    <source src="audio/forest.wav" type="audio/wav"/>
+</audio>
+<audio id="owlAudio" preload="none">
+    <source src="audio/owl.mp3" type="audio/mpeg"/>
+    <source src="audio/owl.wav" type="audio/wav"/>
+</audio>
+
+<script src="app.js"></script>
+</body>
+</html>
