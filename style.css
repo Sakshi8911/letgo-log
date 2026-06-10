@@ -170,7 +170,8 @@ body.day .bmc-btn:hover { background: rgba(255,213,0,.28); border-color: rgba(20
   .toggle-wrap { top:12px; left:50%; transform:translateX(-50%); padding:4px; }
   .toggle-btn { padding:7px 12px; font-size:.74rem; }
   .audio-btn { top:12px; right:10px; padding:7px 11px; font-size:.72rem; }
-  .bmc-btn { bottom:12px; right:10px; }
+  .bmc-btn { bottom:12px; right:10px; width:auto; gap:6px; padding:7px 13px 7px 9px; opacity:0.85; }
+  .bmc-btn span { max-width:120px; opacity:1; }
 }
 @media (max-width:380px) {
   .toggle-btn { padding:6px 8px; font-size:.68rem; }
