@@ -159,7 +159,7 @@ body.day .bmc-btn:hover { background: rgba(255,213,0,.28); border-color: rgba(20
 
 /* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width:560px) {
-  .counters { top:auto; bottom:100px; left:50%; transform:translateX(-50%); flex-direction:row; gap:8px; }
+  .counters { top:62px; bottom:auto; left:50%; transform:translateX(-50%); flex-direction:row; gap:8px; }
   .counter-box { min-width:0; padding:8px 12px; }
   .counter-num { font-size:1.1rem; }
   .sun { right:110px; }
