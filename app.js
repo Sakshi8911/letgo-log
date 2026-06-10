@@ -1498,7 +1498,7 @@ function updateAndDrawClouds() {
 ═══════════════════════════════════════════════════════════ */
 function drawMoon() {
   /* Soft, unobtrusive moon — background element, not the focus */
-  const mx = W - 310, my = 72, r = 30;
+  const mx = W < 600 ? W - 80 : W - 310, my = 72, r = 30;
   ctx.save();
 
   /* Large outer glow — the main visible feature, very soft */
