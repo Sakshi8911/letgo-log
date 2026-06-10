@@ -353,11 +353,13 @@ const ctx = canvas.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth; H = window.innerHeight;
+  W = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+  H = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 window.addEventListener('resize', resize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 resize();
 
 /* Scene anchors (live) */
