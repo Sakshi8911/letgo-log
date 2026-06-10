@@ -8,6 +8,50 @@
 ═══════════════════════════════════════════════════════════ */
 gsap.registerPlugin(MotionPathPlugin);
 
+/* ═══════════ FIREBASE REAL-TIME BROADCAST ═══════════ */
+const _fbConfig = {
+  apiKey: "AIzaSyCItp3NNvFo6B2YeEP8vzB87_S7EVd8EXQ",
+  authDomain: "letgo-log.firebaseapp.com",
+  databaseURL: "https://letgo-log-default-rtdb.firebaseio.com",
+  projectId: "letgo-log",
+  storageBucket: "letgo-log.firebasestorage.app",
+  messagingSenderId: "347754645860",
+  appId: "1:347754645860:web:9faa3575efd46a4cd6d271"
+};
+firebase.initializeApp(_fbConfig);
+const _db = firebase.database();
+const _bcastRef = _db.ref('broadcasts');
+const _SESSION = Math.random().toString(36).slice(2);
+const _PAGE_TS  = Date.now();
+
+/* Listen for other users' submissions */
+_bcastRef.on('child_added', snap => {
+  const d = snap.val();
+  if (!d || d.session === _SESSION || d.ts < _PAGE_TS) return;
+  if (d.type === 'fire')  { spawnFireWord(d.text); fireFlare(); }
+  if (d.type === 'plant') { _spawnPlantMist(d.text); }
+});
+
+/* Cleanup entries older than 20 s every 15 s */
+setInterval(() => {
+  _bcastRef.orderByChild('ts').endAt(Date.now() - 20000).once('value', snap => {
+    snap.forEach(c => c.ref.remove());
+  });
+}, 15000);
+
+function _broadcast(type, text) {
+  _bcastRef.push({ type, text, session: _SESSION, ts: Date.now() });
+}
+
+function _spawnPlantMist(text) {
+  const mist = document.createElement('div');
+  mist.className = 'mist-text';
+  mist.textContent = text;
+  mist.style.cssText = `left:${sceneCX()-80}px;top:${groundY()-120}px;max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
+  document.body.appendChild(mist);
+  setTimeout(() => mist.remove(), 2700);
+}
+
 /* ═══════════ MODERATION ═══════════ */
 
 /* ── Crisis: suicidal ideation, self-harm intent, hopelessness ── */
@@ -1584,6 +1628,7 @@ function throwLog() {
     onComplete: () => { log.remove(); spawnFireWord(text); fireFlare(); }
   });
 
+  _broadcast('fire', text);
   input.value = ''; input.focus();
 }
 function spawnFireWord(text) {
@@ -1633,6 +1678,7 @@ function waterPlant() {
   mist.style.cssText=`left:${sceneCX()-80}px;top:${groundY()-120}px;max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
   document.body.appendChild(mist); setTimeout(()=>mist.remove(), 2700);
 
+  _broadcast('plant', text);
   input.value=''; input.focus();
 }
 
