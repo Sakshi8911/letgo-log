@@ -32,8 +32,8 @@ let _globalPlantToday = 0, _globalPlantYear = 0;
 _bcastRef.on('child_added', snap => {
   const d = snap.val();
   if (!d || d.session === _SESSION || d.ts < _PAGE_TS) return;
-  if (d.type === 'fire')  { spawnFireWord(d.text); fireFlare(); }
-  if (d.type === 'plant') { _spawnPlantMist(d.text); }
+  if (d.type === 'fire'  && currentView === 'night') { spawnFireWord(d.text); fireFlare(); }
+  if (d.type === 'plant' && currentView === 'day')   { _spawnPlantMist(d.text); }
 });
 
 /* Cleanup entries older than 20 s every 15 s */
