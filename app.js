@@ -24,6 +24,10 @@ const _bcastRef = _db.ref('broadcasts');
 const _SESSION = Math.random().toString(36).slice(2);
 const _PAGE_TS  = Date.now();
 
+/* ── Global counter state (populated from Firebase) ── */
+let _globalFireToday = 0, _globalFireYear = 0;
+let _globalPlantToday = 0, _globalPlantYear = 0;
+
 /* Listen for other users' submissions */
 _bcastRef.on('child_added', snap => {
   const d = snap.val();
@@ -51,6 +55,60 @@ function _spawnPlantMist(text) {
   document.body.appendChild(mist);
   setTimeout(() => mist.remove(), 2700);
 }
+
+/* ── Firebase global counters ── */
+function _incFireCounter() {
+  const today = new Date().toISOString().slice(0, 10);
+  _db.ref('counters/fire').transaction(d => {
+    if (!d) d = {};
+    if (!d.daily || d.daily.date !== today) d.daily = { date: today, count: 0 };
+    d.daily.count = (d.daily.count || 0) + 1;
+    d.yearly = (d.yearly || 0) + 1;
+    return d;
+  });
+}
+function _incPlantCounter() {
+  const today = new Date().toISOString().slice(0, 10);
+  _db.ref('counters/plant').transaction(d => {
+    if (!d) d = {};
+    if (!d.daily || d.daily.date !== today) d.daily = { date: today, count: 0 };
+    d.daily.count = (d.daily.count || 0) + 1;
+    d.yearly = (d.yearly || 0) + 1;
+    return d;
+  });
+}
+function _initCounters() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  _db.ref('counters/fire').on('value', snap => {
+    const d = snap.val() || {};
+    _globalFireToday = (d.daily && d.daily.date === today) ? (d.daily.count || 0) : 0;
+    _globalFireYear  = d.yearly || 0;
+    /* Sync fire intensity to global daily count */
+    fireDayCount = _globalFireToday;
+    fireIntensity = Math.min(0.1 + fireDayCount * 0.055, 2.0);
+    if (typeof updateFireUI === 'function') updateFireUI();
+  });
+
+  _db.ref('counters/plant').on('value', snap => {
+    const d = snap.val() || {};
+    _globalPlantToday = (d.daily && d.daily.date === today) ? (d.daily.count || 0) : 0;
+    _globalPlantYear  = d.yearly || 0;
+    /* Sync tree growth to global daily count */
+    const prevCompleted = Math.floor(plantDayCount / PLANTS_PER_TREE);
+    plantDayCount = _globalPlantToday;
+    const newCompleted = Math.floor(plantDayCount / PLANTS_PER_TREE);
+    if (newCompleted > prevCompleted) {
+      if (typeof gsap !== 'undefined' && tree) { gsap.killTweensOf(tree); tree.g = 0; tree.target = 0; }
+    } else {
+      if (typeof setPlantTarget === 'function') setPlantTarget();
+      if (typeof animateTreeGrowth === 'function') animateTreeGrowth();
+    }
+    if (typeof updatePlantUI === 'function') updatePlantUI();
+  });
+}
+/* Call after rest of script has defined todayKey etc. */
+setTimeout(_initCounters, 0);
 
 /* ═══════════ MODERATION ═══════════ */
 
@@ -248,12 +306,12 @@ const fmt = n => n.toLocaleString();
 let fireTodayCount  = 0;   /* incremented in throwLog, synced to fireDayCount */
 let plantTodayCount = 0;   /* incremented in waterPlant, synced to plantDayCount */
 const updateFireUI  = () => {
-  document.getElementById('fireTodayEl').textContent  = fmt(fireTodayCount);
-  document.getElementById('fireYearEl').textContent   = fmt(BFY + fireDayCount);
+  document.getElementById('fireTodayEl').textContent  = fmt(_globalFireToday);
+  document.getElementById('fireYearEl').textContent   = fmt(_globalFireYear);
 };
 const updatePlantUI = () => {
-  document.getElementById('plantTodayEl').textContent = fmt(plantTodayCount);
-  document.getElementById('plantYearEl').textContent  = fmt(BPY + plantDayCount);
+  document.getElementById('plantTodayEl').textContent = fmt(_globalPlantToday);
+  document.getElementById('plantYearEl').textContent  = fmt(_globalPlantYear);
 };
 /* NOTE: updateFireUI() / updatePlantUI() are called AFTER fireDayCount and
    plantDayCount are initialised below — calling them here would crash the
@@ -409,7 +467,7 @@ class FireParticle {
 }
 
 function updateFlame() {
-  fireDayCount = loadFireDay();
+  /* fireDayCount is kept in sync with the global Firebase counter */
   fireIntensity = Math.min(0.1 + fireDayCount * 0.055, 2.0);
 }
 updateFlame();
@@ -1603,7 +1661,8 @@ function throwLog() {
   const input = document.getElementById('fireInput'); const text = input.value.trim();
   if (!text) { input.focus(); return; }
   const v = checkModeration(text); if (v) { showModAlert(v); return; }
-  fireTodayCount++; fireDayCount++; saveFireDay(fireDayCount); updateFlame(); updateFireUI();
+  fireTodayCount++; fireDayCount++; saveFireDay(fireDayCount); updateFlame();
+  _incFireCounter();
 
   const ir = input.getBoundingClientRect();
   const sx = ir.left + ir.width/2 - 55, sy = ir.top - 10;
@@ -1646,7 +1705,7 @@ function waterPlant() {
   const v = checkAffirmation(text); if (v) { showModAlert(v); return; }
   const prevCompleted = Math.floor(plantDayCount / PLANTS_PER_TREE);
   plantTodayCount++; plantDayCount++; savePlantDay(plantDayCount);
-  updatePlantUI();
+  _incPlantCounter();
   const newCompleted = Math.floor(plantDayCount / PLANTS_PER_TREE);
   if (newCompleted > prevCompleted) {
     /* Tree just completed — snap new sapling to g=0 instantly, no shrink animation */
