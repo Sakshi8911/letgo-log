@@ -291,6 +291,10 @@ function showModAlert(type) {
 /* ═══════════ STATE ═══════════ */
 let currentView = localStorage.getItem('letgo_view') || 'night';
 let audioEnabled = false;
+/* Set audio button label based on screen size on load */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('audioBtn').textContent = window.innerWidth <= 560 ? '🔇' : '🔇 Unmute';
+});
 
 /* ═══════════ COUNTERS (user-driven only) ═══════════
    PRODUCTION: replace baselines with a fetch, e.g.
@@ -1597,7 +1601,10 @@ function switchView(mode) {
 /* ═══════════ AUDIO ═══════════ */
 function toggleAudio() {
   audioEnabled = !audioEnabled;
-  document.getElementById('audioBtn').textContent = audioEnabled ? '🔊 Mute' : '🔇 Unmute';
+  const _mob = window.innerWidth <= 560;
+  document.getElementById('audioBtn').textContent = audioEnabled
+    ? (_mob ? '🔊' : '🔊 Mute')
+    : (_mob ? '🔇' : '🔇 Unmute');
   if (audioEnabled) {
     const el = document.getElementById(currentView === 'night' ? 'fireAudio' : 'plantAudio');
     el.play().catch(err => console.error('[Audio] play() failed:', err, '| src:', el.currentSrc));
