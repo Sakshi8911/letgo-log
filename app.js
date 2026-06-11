@@ -292,15 +292,11 @@ function showModAlert(type) {
 let currentView = localStorage.getItem('letgo_view') || 'night';
 let audioEnabled = false;
 /* Set audio button label based on screen size on load */
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('audioBtn').textContent = window.innerWidth <= 560 ? '🔇' : '🔇 Unmute';
-  /* Show welcome popup only on first visit */
-  if (!localStorage.getItem('letgo_welcomed')) {
-    document.getElementById('welcomeOverlay').classList.remove('hidden');
-  } else {
-    document.getElementById('welcomeOverlay').classList.add('hidden');
-  }
-});
+document.getElementById('audioBtn').textContent = window.innerWidth <= 560 ? '🔇' : '🔇 Unmute';
+/* Show welcome popup only on first visit */
+if (!localStorage.getItem('letgo_welcomed')) {
+  document.getElementById('welcomeOverlay').classList.remove('hidden');
+}
 function dismissWelcome() {
   localStorage.setItem('letgo_welcomed', '1');
   const overlay = document.getElementById('welcomeOverlay');
