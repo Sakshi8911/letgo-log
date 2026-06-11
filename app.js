@@ -1512,48 +1512,43 @@ function updateAndDrawClouds() {
    Positioned in upper-right area, slightly left of the audio button.
 ═══════════════════════════════════════════════════════════ */
 function drawMoon() {
-  /* Soft, unobtrusive moon — background element, not the focus */
-  const mx = W < 600 ? W - 80 : W - 310, my = 72, r = 30;
+  const mx = W < 600 ? W - 80 : W - 310, my = 68, r = 22;
   ctx.save();
 
-  /* Large outer glow — the main visible feature, very soft */
-  const halo = ctx.createRadialGradient(mx, my, r * 0.5, mx, my, r * 3.5);
-  halo.addColorStop(0,   'rgba(255,250,215,.13)');
-  halo.addColorStop(0.4, 'rgba(240,235,200,.05)');
-  halo.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = halo;
-  ctx.beginPath(); ctx.arc(mx, my, r * 3.5, 0, 7); ctx.fill();
+  /* Yellow glow halo */
+  const glow = ctx.createRadialGradient(mx, my, 0, mx, my, r * 3.5);
+  glow.addColorStop(0,   'rgba(255,240,100, 0.28)');
+  glow.addColorStop(0.4, 'rgba(255,230, 80, 0.10)');
+  glow.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(mx, my, r * 3.5, 0, Math.PI * 2); ctx.fill();
 
-  /* Clip to disc */
-  ctx.beginPath(); ctx.arc(mx, my, r, 0, 7); ctx.clip();
+  /* Crescent via offscreen canvas + destination-out.
+     evenodd fails when the shadow disc extends outside the outer disc — those
+     outer-only pixels get count=1 (odd) and render as a second filled shape.
+     destination-out punches a real transparent hole regardless of overlap. */
+  const sz = Math.ceil(r * 4 * DPR);
+  const oc = document.createElement('canvas');
+  oc.width = sz; oc.height = sz;
+  const ox = oc.getContext('2d');
+  const cx = r * 2, cy = r * 2;   /* moon centre in offscreen logical coords */
+  ox.scale(DPR, DPR);
 
-  /* Base fill — pale warm grey */
-  ctx.fillStyle = '#d8d4c8';
-  ctx.fillRect(mx - r, my - r, r * 2, r * 2);
+  ox.fillStyle = 'rgba(255,250,195,1)';
+  ox.beginPath(); ox.arc(cx, cy, r, 0, Math.PI * 2); ox.fill();
 
-  /* Very faint, blurry surface patches — barely visible */
-  [[0.2, 0.1, 0.38, 0.28], [-0.22, 0.25, 0.30, 0.22], [0.05, -0.28, 0.24, 0.18]]
-    .forEach(([dx, dy, rx, ry]) => {
-      ctx.fillStyle = 'rgba(60,65,80,0.07)';
-      ctx.beginPath(); ctx.ellipse(mx+dx*r, my+dy*r, rx*r, ry*r, 0.3, 0, 7); ctx.fill();
-    });
+  /* Rotate shadow disc offset ~38° clockwise so crescent tilts left */
+  ox.globalCompositeOperation = 'destination-out';
+  ox.fillStyle = 'rgba(0,0,0,1)';
+  ox.translate(cx, cy);
+  ox.rotate(-Math.PI / 4.7);  /* ≈ 38° counter-clockwise */
+  ox.translate(-cx, -cy);
+  ox.beginPath(); ox.arc(cx + r * 0.46, cy - r * 0.05, r * 0.86, 0, Math.PI * 2); ox.fill();
 
-  /* Spherical shading — very gentle, lit from upper-left */
-  const lit = ctx.createRadialGradient(mx - r*0.32, my - r*0.30, 0, mx, my, r);
-  lit.addColorStop(0,    'rgba(255,252,238,0.80)');
-  lit.addColorStop(0.55, 'rgba(210,205,185,0.30)');
-  lit.addColorStop(1,    'rgba(30,35,55,0.30)');
-  ctx.fillStyle = lit;
-  ctx.fillRect(mx - r, my - r, r * 2, r * 2);
+  /* Stamp crescent onto main canvas */
+  ctx.globalAlpha = 0.52;
+  ctx.drawImage(oc, 0, 0, sz, sz, mx - cx, my - cy, sz / DPR, sz / DPR);
 
-  ctx.restore();
-
-  /* Outer edge glow ring on the lit side (drawn outside clip) */
-  ctx.save();
-  ctx.globalAlpha = 0.10;
-  ctx.strokeStyle = '#fffde0';
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(mx, my, r, Math.PI * 0.8, Math.PI * 1.7); ctx.stroke();
   ctx.restore();
 }
 
